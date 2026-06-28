@@ -1,25 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useColors } from '@/hooks/useColors';
+import { getScoreColor } from '@/lib/data';
 
 interface ScoreRingProps {
   score: number;
   size?: number;
   strokeWidth?: number;
   label?: string;
+  showLabel?: boolean;
 }
 
-export function ScoreRing({ score, size = 64, strokeWidth = 5, label }: ScoreRingProps) {
-  const colors = useColors();
-
-  const getScoreColor = (s: number) => {
-    if (s >= 75) return colors.scoreHealthy;
-    if (s >= 50) return colors.scoreWarning;
-    return colors.scoreCritical;
-  };
-
-  const scoreColor = getScoreColor(score);
-  const innerSize = size - strokeWidth * 2;
+export function ScoreRing({ score, size = 56, strokeWidth = 3, label, showLabel }: ScoreRingProps) {
+  const color = getScoreColor(score);
+  const innerSize = size - strokeWidth * 2 - 4;
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
@@ -30,69 +23,40 @@ export function ScoreRing({ score, size = 64, strokeWidth = 5, label }: ScoreRin
           height: size,
           borderRadius: size / 2,
           borderWidth: strokeWidth,
-          borderColor: colors.border,
+          borderColor: color + '30',
+          backgroundColor: '#0a0b0c',
         }
       ]}>
         <View style={[
-          styles.progressOverlay,
-          {
-            position: 'absolute',
-            top: -strokeWidth,
-            left: -strokeWidth,
-            width: size,
-            height: size,
-            borderRadius: size / 2,
-            borderWidth: strokeWidth,
-            borderColor: scoreColor,
-            borderTopColor: score < 25 ? 'transparent' : scoreColor,
-            borderRightColor: score < 50 ? 'transparent' : scoreColor,
-            borderBottomColor: score < 75 ? 'transparent' : scoreColor,
-            borderLeftColor: score < 100 ? scoreColor : scoreColor,
-            transform: [{ rotate: '-90deg' }],
-          }
-        ]} />
-        <View style={[
-          styles.inner,
+          styles.innerCircle,
           {
             width: innerSize,
             height: innerSize,
             borderRadius: innerSize / 2,
-            backgroundColor: scoreColor,
+            borderWidth: strokeWidth,
+            borderColor: color,
           }
         ]}>
-          <Text style={[styles.score, { fontSize: size < 50 ? 12 : 16, color: '#fff' }]}>
+          <Text style={[styles.score, { fontSize: size < 50 ? 12 : size < 70 ? 15 : 20, color }]}>
             {score}
           </Text>
+          {size >= 70 && (
+            <Text style={[styles.pct, { color: color + '80' }]}>%</Text>
+          )}
         </View>
       </View>
-      {label && (
-        <Text style={[styles.label, { color: colors.mutedForeground }]}>{label}</Text>
+      {showLabel && label && (
+        <Text style={[styles.label, { color: '#5a5d63' }]}>{label}</Text>
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    gap: 4,
-  },
-  outerRing: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  progressOverlay: {},
-  inner: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  score: {
-    fontFamily: 'Inter_700Bold',
-    color: '#fff',
-  },
-  label: {
-    fontSize: 11,
-    fontFamily: 'Inter_500Medium',
-    textAlign: 'center',
-  },
+  container: { alignItems: 'center', gap: 4 },
+  outerRing: { alignItems: 'center', justifyContent: 'center' },
+  innerCircle: { alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent' },
+  score: { fontFamily: 'Inter_700Bold', lineHeight: 18 },
+  pct: { fontSize: 9, fontFamily: 'Inter_600SemiBold', marginTop: -2 },
+  label: { fontSize: 10, fontFamily: 'Inter_500Medium', textAlign: 'center' },
 });

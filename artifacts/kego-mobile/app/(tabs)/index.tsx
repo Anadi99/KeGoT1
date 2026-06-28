@@ -1,152 +1,246 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Platform
+  Platform, Animated
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
-import { ProjectCard } from '@/components/ProjectCard';
-import { mockProjects } from '@/lib/data';
+import { ScoreRing } from '@/components/ScoreRing';
+import {
+  mockProjects, mockRecoveryHub, mockAIInsights,
+  formatTimeAgo, getScoreColor
+} from '@/lib/data';
 
-const recommendations = [
-  { projectId: '1', label: 'Best to resume', color: '#22c55e', reason: '92% context complete — waitlist integration next' },
-  { projectId: '5', label: 'Quickest win', color: '#3b82f6', reason: '85% done — could ship in 2-3 hours' },
-  { projectId: '4', label: 'At risk', color: '#f59e0b', reason: 'No activity in 6 months — fading fast' },
-];
+const priorityProjects = mockProjects.slice(0, 3);
+const featuredProject = mockProjects[0];
 
 export default function DashboardScreen() {
   const colors = useColors();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const topPad = Platform.OS === 'web' ? 67 : insets.top;
+  const topPad = Platform.OS === 'web' ? 16 : insets.top + 8;
+  const bottomPad = Platform.OS === 'web' ? 80 : 100;
 
-  const totalProjects = mockProjects.length;
-  const healthyCount = mockProjects.filter(p => p.health === 'healthy').length;
-  const needAttentionCount = mockProjects.filter(p => p.health !== 'healthy').length;
+  const activeCount = mockProjects.filter(p => p.health === 'active' || p.health === 'recovering' || p.health === 'healthy').length;
+  const pausedCount = mockProjects.filter(p => p.health === 'at-risk' || p.health === 'stalled').length;
+  const recoveredCount = mockProjects.filter(p => p.health === 'recovered').length;
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }).toUpperCase();
 
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={[styles.content, { paddingTop: topPad + 16, paddingBottom: Platform.OS === 'web' ? 34 : 100 }]}
+      contentContainerStyle={{ paddingTop: topPad, paddingBottom: bottomPad }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.topBar}>
-        <View style={styles.logoRow}>
-          <View style={[styles.logoIcon, { backgroundColor: colors.primary }]}>
-            <Ionicons name="aperture" size={18} color="#fff" />
+      <View style={styles.header}>
+        <View>
+          <Text style={styles.title}>Command Center</Text>
+          <Text style={styles.date}>{today}</Text>
+        </View>
+        <TouchableOpacity style={styles.avatarBtn}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>F</Text>
           </View>
-          <Text style={[styles.logoText, { color: colors.foreground }]}>KeGo</Text>
-        </View>
-        <View style={styles.topActions}>
-          <TouchableOpacity style={[styles.iconBtn, { backgroundColor: colors.surface1 }]}>
-            <Feather name="search" size={18} color={colors.foreground} />
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.iconBtn, { backgroundColor: colors.surface1 }]}>
-            <Ionicons name="notifications-outline" size={18} color={colors.foreground} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View style={styles.greeting}>
-        <Text style={[styles.greetingTitle, { color: colors.foreground }]}>Good morning 👋</Text>
-        <Text style={[styles.greetingSubtitle, { color: colors.mutedForeground }]}>
-          You have {needAttentionCount} projects needing attention
-        </Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.statsRow}>
-        <StatCard label="Total" value={totalProjects} color={colors.primary} colors={colors} />
-        <StatCard label="Healthy" value={healthyCount} color={colors.scoreHealthy} colors={colors} />
-        <StatCard label="At Risk" value={needAttentionCount} color={colors.scoreWarning} colors={colors} />
+        <StatBlock label="ACTIVE" value={activeCount} accent={colors.accent} />
+        <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+        <StatBlock label="PAUSED" value={pausedCount} accent="#ffffff" />
+        <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
+        <StatBlock label="RECOVERED" value={recoveredCount} accent="#ffffff" />
       </View>
 
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Recovery Recommendations</Text>
-        <View style={styles.recommendations}>
-          {recommendations.map(rec => {
-            const project = mockProjects.find(p => p.id === rec.projectId);
-            if (!project) return null;
-            return (
-              <TouchableOpacity
-                key={rec.projectId}
-                style={[styles.recCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-                onPress={() => router.push(`/project/${rec.projectId}` as any)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.recHeader}>
-                  <Text style={[styles.recName, { color: colors.foreground }]} numberOfLines={1}>
-                    {project.name}
-                  </Text>
-                  <View style={[styles.recLabel, { backgroundColor: rec.color + '20', borderColor: rec.color + '40' }]}>
-                    <Text style={[styles.recLabelText, { color: rec.color }]}>{rec.label}</Text>
-                  </View>
-                </View>
-                <Text style={[styles.recReason, { color: colors.mutedForeground }]}>{rec.reason}</Text>
-                <View style={styles.recFooter}>
-                  <Text style={[styles.resumeText, { color: colors.primary }]}>Resume →</Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
+      <TouchableOpacity
+        style={[styles.insightBanner, { borderColor: colors.accent + '50', backgroundColor: colors.card }]}
+        onPress={() => {}}
+        activeOpacity={0.8}
+      >
+        <View style={styles.insightLeft}>
+          <View style={styles.insightHeader}>
+            <Text style={{ fontSize: 13, color: colors.accent }}>✦</Text>
+            <Text style={[styles.insightTitle, { color: '#ffffff' }]}>AI Insights Ready</Text>
+          </View>
+          <Text style={[styles.insightDesc, { color: colors.textSecondary }]}>
+            3 projects ready for recovery{'\n'}based on current momentum.
+          </Text>
         </View>
-      </View>
+        <TouchableOpacity style={[styles.viewBtn, { backgroundColor: colors.accent }]}>
+          <Text style={[styles.viewBtnText, { color: '#000000' }]}>VIEW</Text>
+        </TouchableOpacity>
+      </TouchableOpacity>
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Recent Projects</Text>
+          <Text style={[styles.sectionTitle, { color: '#ffffff' }]}>Priority Projects</Text>
           <TouchableOpacity onPress={() => router.push('/(tabs)/projects' as any)}>
-            <Text style={[styles.viewAll, { color: colors.primary }]}>View all</Text>
+            <Text style={[styles.seeAll, { color: colors.accent }]}>SEE ALL</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.projectList}>
-          {mockProjects.slice(0, 3).map(project => (
-            <ProjectCard key={project.id} project={project} />
+          {priorityProjects.map(project => (
+            <TouchableOpacity
+              key={project.id}
+              style={[styles.priorityRow, { backgroundColor: colors.card, borderColor: colors.border }]}
+              onPress={() => router.push(`/project/${project.id}` as any)}
+              activeOpacity={0.7}
+            >
+              <ScoreRing score={project.resumeScore} size={52} strokeWidth={3} />
+              <View style={styles.priorityContent}>
+                <Text style={[styles.priorityName, { color: '#ffffff' }]}>{project.name}</Text>
+                <Text style={[styles.priorityMeta, { color: colors.textSecondary }]}>
+                  {project.currentPhase ? `Phase: ${project.currentPhase}` : formatTimeAgo(project.lastActivity)}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
+            </TouchableOpacity>
           ))}
         </View>
       </View>
+
+      <View style={[styles.memoryNodeCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={styles.memoryNodeGradient}>
+          <Text style={[styles.memoryNodeLabel, { color: colors.accent }]}>MEMORY NODE</Text>
+          <Text style={[styles.memoryNodeTitle, { color: '#ffffff' }]}>Global Architecture</Text>
+        </View>
+        <View style={styles.nodeLines}>
+          {[0, 1, 2, 3, 4].map(i => (
+            <View
+              key={i}
+              style={[
+                styles.nodeLine,
+                {
+                  top: `${20 + i * 15}%` as any,
+                  left: `${10 + i * 12}%` as any,
+                  width: `${40 + i * 8}%` as any,
+                  opacity: 0.2 + i * 0.05,
+                  backgroundColor: colors.accent,
+                }
+              ]}
+            />
+          ))}
+        </View>
+      </View>
+
+      <TouchableOpacity
+        style={[styles.velocityCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+        activeOpacity={0.8}
+      >
+        <View style={styles.velocityHeader}>
+          <View style={[styles.velocityIcon, { backgroundColor: colors.surface2 }]}>
+            <Ionicons name="time-outline" size={18} color={colors.accent} />
+          </View>
+          <Text style={[styles.velocityDelta, { color: colors.accent }]}>
+            +{mockRecoveryHub.momentumDelta}% vs LY
+          </Text>
+        </View>
+        <Text style={[styles.velocityTitle, { color: '#ffffff' }]}>Recovery Velocity</Text>
+        <View style={[styles.velocityBar, { backgroundColor: colors.border }]}>
+          <View style={[styles.velocityFill, {
+            backgroundColor: colors.accent,
+            width: `${mockRecoveryHub.momentumScore}%` as any,
+          }]} />
+        </View>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.resumeBtn, { backgroundColor: colors.accent }]}
+        onPress={() => router.push(`/project/${featuredProject.id}` as any)}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="play" size={16} color="#000000" />
+        <Text style={styles.resumeBtnText}>Resume {featuredProject.name}</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
 
-function StatCard({ label, value, color, colors }: { label: string; value: number; color: string; colors: any }) {
+function StatBlock({ label, value, accent }: { label: string; value: number; accent: string }) {
   return (
-    <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <Text style={[styles.statValue, { color }]}>{value}</Text>
-      <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>{label}</Text>
+    <View style={styles.statBlock}>
+      <Text style={[styles.statLabel, { color: '#5a5d63' }]}>{label}</Text>
+      <Text style={[styles.statValue, { color: accent }]}>{value}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { paddingHorizontal: 16, gap: 24 },
-  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  logoIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  logoText: { fontSize: 20, fontFamily: 'Inter_700Bold' },
-  topActions: { flexDirection: 'row', gap: 8 },
-  iconBtn: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  greeting: { gap: 4 },
-  greetingTitle: { fontSize: 24, fontFamily: 'Inter_700Bold' },
-  greetingSubtitle: { fontSize: 14, fontFamily: 'Inter_400Regular' },
-  statsRow: { flexDirection: 'row', gap: 10 },
-  statCard: { flex: 1, borderRadius: 14, borderWidth: 1, padding: 14, alignItems: 'center', gap: 2 },
-  statValue: { fontSize: 28, fontFamily: 'Inter_700Bold' },
-  statLabel: { fontSize: 12, fontFamily: 'Inter_500Medium' },
-  section: { gap: 14 },
+  header: {
+    flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between',
+    paddingHorizontal: 20, paddingBottom: 20,
+  },
+  title: { fontSize: 28, fontFamily: 'Inter_700Bold', color: '#ffffff', lineHeight: 34 },
+  date: { fontSize: 11, fontFamily: 'Inter_500Medium', color: '#5a5d63', marginTop: 2 },
+  avatarBtn: {},
+  avatar: {
+    width: 38, height: 38, borderRadius: 19,
+    backgroundColor: '#c2ff00', alignItems: 'center', justifyContent: 'center',
+  },
+  avatarText: { fontSize: 16, fontFamily: 'Inter_700Bold', color: '#000000' },
+  statsRow: {
+    flexDirection: 'row', alignItems: 'center',
+    marginHorizontal: 20, marginBottom: 16,
+    backgroundColor: '#141618', borderRadius: 14,
+    borderWidth: 1, borderColor: '#252729',
+    padding: 16,
+  },
+  statBlock: { flex: 1, alignItems: 'center', gap: 4 },
+  statDivider: { width: 1, height: 36, marginHorizontal: 8 },
+  statLabel: { fontSize: 10, fontFamily: 'Inter_600SemiBold', letterSpacing: 1 },
+  statValue: { fontSize: 32, fontFamily: 'Inter_700Bold', lineHeight: 38 },
+  insightBanner: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginHorizontal: 20, marginBottom: 24,
+    borderRadius: 14, borderWidth: 1, padding: 16, gap: 12,
+  },
+  insightLeft: { flex: 1, gap: 6 },
+  insightHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  insightTitle: { fontSize: 16, fontFamily: 'Inter_700Bold' },
+  insightDesc: { fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 18 },
+  viewBtn: { borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10 },
+  viewBtnText: { fontSize: 13, fontFamily: 'Inter_700Bold', letterSpacing: 0.5 },
+  section: { marginHorizontal: 20, marginBottom: 20, gap: 12 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   sectionTitle: { fontSize: 18, fontFamily: 'Inter_700Bold' },
-  viewAll: { fontSize: 14, fontFamily: 'Inter_500Medium' },
-  recommendations: { gap: 10 },
-  recCard: { borderRadius: 14, borderWidth: 1, padding: 14, gap: 8 },
-  recHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  recName: { fontSize: 15, fontFamily: 'Inter_600SemiBold', flex: 1 },
-  recLabel: { borderRadius: 20, borderWidth: 1, paddingHorizontal: 8, paddingVertical: 3 },
-  recLabelText: { fontSize: 11, fontFamily: 'Inter_600SemiBold' },
-  recReason: { fontSize: 13, fontFamily: 'Inter_400Regular', lineHeight: 18 },
-  recFooter: { flexDirection: 'row', justifyContent: 'flex-end' },
-  resumeText: { fontSize: 13, fontFamily: 'Inter_600SemiBold' },
-  projectList: { gap: 10 },
+  seeAll: { fontSize: 12, fontFamily: 'Inter_600SemiBold', letterSpacing: 0.5 },
+  projectList: { gap: 8 },
+  priorityRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    borderRadius: 12, borderWidth: 1, padding: 14,
+  },
+  priorityContent: { flex: 1, gap: 3 },
+  priorityName: { fontSize: 15, fontFamily: 'Inter_600SemiBold' },
+  priorityMeta: { fontSize: 12, fontFamily: 'Inter_400Regular' },
+  memoryNodeCard: {
+    marginHorizontal: 20, marginBottom: 12,
+    borderRadius: 14, borderWidth: 1,
+    overflow: 'hidden', height: 100,
+  },
+  memoryNodeGradient: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    padding: 14, zIndex: 2,
+  },
+  memoryNodeLabel: { fontSize: 10, fontFamily: 'Inter_600SemiBold', letterSpacing: 1 },
+  memoryNodeTitle: { fontSize: 18, fontFamily: 'Inter_700Bold' },
+  nodeLines: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  nodeLine: { position: 'absolute', height: 1, borderRadius: 1 },
+  velocityCard: {
+    marginHorizontal: 20, marginBottom: 20,
+    borderRadius: 14, borderWidth: 1, padding: 16, gap: 8,
+  },
+  velocityHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  velocityIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  velocityDelta: { fontSize: 13, fontFamily: 'Inter_700Bold' },
+  velocityTitle: { fontSize: 16, fontFamily: 'Inter_700Bold' },
+  velocityBar: { height: 4, borderRadius: 2, overflow: 'hidden' },
+  velocityFill: { height: '100%', borderRadius: 2 },
+  resumeBtn: {
+    marginHorizontal: 20, borderRadius: 14, paddingVertical: 18,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+  },
+  resumeBtnText: { fontSize: 16, fontFamily: 'Inter_700Bold', color: '#000000' },
 });

@@ -1,71 +1,44 @@
 import { BlurView } from "expo-blur";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
-import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
-import { Feather, Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Platform, StyleSheet, View, useColorScheme } from "react-native";
-
+import { Platform, StyleSheet } from "react-native";
 import { useColors } from "@/hooks/useColors";
 
-function NativeTabLayout() {
-  return (
-    <NativeTabs>
-      <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: "house", selected: "house.fill" }} />
-        <Label>Dashboard</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="projects">
-        <Icon sf={{ default: "folder", selected: "folder.fill" }} />
-        <Label>Projects</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="capture">
-        <Icon sf={{ default: "plus.circle", selected: "plus.circle.fill" }} />
-        <Label>Capture</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="settings">
-        <Icon sf={{ default: "gear", selected: "gear" }} />
-        <Label>Settings</Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
-  );
-}
-
-function ClassicTabLayout() {
+export default function TabLayout() {
   const colors = useColors();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
   const isIOS = Platform.OS === "ios";
   const isWeb = Platform.OS === "web";
+  const liquidGlass = isLiquidGlassAvailable();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.mutedForeground,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: "#5a5d63",
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: isIOS ? "transparent" : colors.background,
-          borderTopWidth: isWeb ? 1 : 0,
-          borderTopColor: colors.border,
+          backgroundColor: liquidGlass || isIOS ? "transparent" : colors.tabBar,
+          borderTopWidth: 1,
+          borderTopColor: colors.tabBarBorder,
           elevation: 0,
-          ...(isWeb ? { height: 84 } : {}),
+          height: isWeb ? 60 : 82,
+          paddingBottom: isWeb ? 8 : 28,
+          paddingTop: 8,
+        },
+        tabBarLabelStyle: {
+          fontFamily: "Inter_500Medium",
+          fontSize: 11,
         },
         tabBarBackground: () =>
-          isIOS ? (
+          isIOS || liquidGlass ? (
             <BlurView
-              intensity={100}
-              tint={isDark ? "dark" : "light"}
+              intensity={90}
+              tint="dark"
               style={StyleSheet.absoluteFill}
-            />
-          ) : isWeb ? (
-            <View
-              style={[
-                StyleSheet.absoluteFill,
-                { backgroundColor: colors.background },
-              ]}
             />
           ) : null,
       }}
@@ -76,33 +49,33 @@ function ClassicTabLayout() {
           title: "Dashboard",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="house.fill" tintColor={color} size={24} />
+              <SymbolView name="square.grid.2x2.fill" tintColor={color} size={22} />
             ) : (
-              <Feather name="home" size={22} color={color} />
+              <Ionicons name="grid" size={22} color={color} />
             ),
         }}
       />
       <Tabs.Screen
-        name="projects"
+        name="memory"
         options={{
-          title: "Projects",
+          title: "Memory",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="folder.fill" tintColor={color} size={24} />
+              <SymbolView name="externaldrive.fill" tintColor={color} size={22} />
             ) : (
-              <Feather name="folder" size={22} color={color} />
+              <Ionicons name="server" size={22} color={color} />
             ),
         }}
       />
       <Tabs.Screen
-        name="capture"
+        name="recover"
         options={{
-          title: "Capture",
+          title: "Recovery",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="plus.circle.fill" tintColor={color} size={24} />
+              <SymbolView name="arrow.clockwise.circle.fill" tintColor={color} size={22} />
             ) : (
-              <Feather name="plus-circle" size={22} color={color} />
+              <Ionicons name="refresh-circle" size={22} color={color} />
             ),
         }}
       />
@@ -112,21 +85,14 @@ function ClassicTabLayout() {
           title: "Settings",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="gear" tintColor={color} size={24} />
+              <SymbolView name="gearshape.fill" tintColor={color} size={22} />
             ) : (
-              <Feather name="settings" size={22} color={color} />
+              <Ionicons name="settings" size={22} color={color} />
             ),
         }}
       />
+      <Tabs.Screen name="projects" options={{ href: null }} />
+      <Tabs.Screen name="capture" options={{ href: null }} />
     </Tabs>
   );
 }
-
-export default function TabLayout() {
-  if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
-  }
-  return <ClassicTabLayout />;
-}
-
-const styles = StyleSheet.create({});
