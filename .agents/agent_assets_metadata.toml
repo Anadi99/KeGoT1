@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "KWd8inahGVQK-Tb6N5O-H"
+uri = "file://artifacts/kego-mobile/assets/images/icon.png"
+type = "image"
+title = "generated_image"

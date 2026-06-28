@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/kego-mobile/"
+title = "KeGo Mobile"
+version = "1.0.0"
+id = "artifacts/kego-mobile"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/kego-mobile/" ]
+localPort = 21852
+
+[services.development]
+run = "pnpm --filter @workspace/kego-mobile run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/kego-mobile", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/kego-mobile", "run", "serve" ]
+
+[services.env]
+PORT = "21852"
+BASE_PATH = "/kego-mobile/"
