@@ -67,10 +67,7 @@ function getDeploymentDomain() {
     return stripProtocol(process.env.EXPO_PUBLIC_DOMAIN);
   }
 
-  console.error(
-    "ERROR: No deployment domain found. Set REPLIT_INTERNAL_APP_DOMAIN, REPLIT_DEV_DOMAIN, or EXPO_PUBLIC_DOMAIN",
-  );
-  process.exit(1);
+  return "localhost:8080";
 }
 
 function prepareDirectories(timestamp) {
@@ -510,9 +507,13 @@ async function main() {
 
   setupSignalHandlers();
 
+  const hasDeploymentDomain =
+    Boolean(process.env.REPLIT_INTERNAL_APP_DOMAIN) ||
+    Boolean(process.env.REPLIT_DEV_DOMAIN) ||
+    Boolean(process.env.EXPO_PUBLIC_DOMAIN);
   const domain = getDeploymentDomain();
   const expoPublicReplId = getExpoPublicReplId();
-  const baseUrl = `https://${domain}`;
+  const baseUrl = hasDeploymentDomain ? `https://${domain}` : `http://${domain}`;
   const timestamp = `${Date.now()}-${process.pid}`;
 
   prepareDirectories(timestamp);

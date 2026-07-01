@@ -5,8 +5,16 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { User, Bell, Shield, Palette, Zap } from 'lucide-react'
+import { useState } from 'react'
 
 export default function SettingsPage() {
+  const [appearance, setAppearance] = useState<'System' | 'Light' | 'Dark'>('Dark')
+  const [notificationSettings, setNotificationSettings] = useState({
+    projectAtRiskAlerts: true,
+    weeklyContextDigest: true,
+    resumeReminders: true,
+  })
+
   return (
     <AppLayout>
       <div className="p-6 max-w-3xl mx-auto space-y-6">
@@ -44,17 +52,22 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {[
-              { label: 'Project at-risk alerts', description: 'Notify when projects need attention' },
-              { label: 'Weekly context digest', description: 'Summary of your project states' },
-              { label: 'Resume reminders', description: 'Reminders to update context before pausing' },
+              { key: 'projectAtRiskAlerts' as const, label: 'Project at-risk alerts', description: 'Notify when projects need attention' },
+              { key: 'weeklyContextDigest' as const, label: 'Weekly context digest', description: 'Summary of your project states' },
+              { key: 'resumeReminders' as const, label: 'Resume reminders', description: 'Reminders to update context before pausing' },
             ].map((item) => (
-              <div key={item.label} className="flex items-center justify-between">
+              <label key={item.label} className="flex items-center justify-between gap-4 cursor-pointer">
                 <div>
                   <p className="text-sm font-medium">{item.label}</p>
                   <p className="text-xs text-muted-foreground">{item.description}</p>
                 </div>
-                <input type="checkbox" defaultChecked className="size-4" />
-              </div>
+                <input
+                  type="checkbox"
+                  checked={notificationSettings[item.key]}
+                  onChange={() => setNotificationSettings((current) => ({ ...current, [item.key]: !current[item.key] }))}
+                  className="size-4"
+                />
+              </label>
             ))}
           </CardContent>
         </Card>
@@ -68,7 +81,12 @@ export default function SettingsPage() {
           <CardContent>
             <div className="flex gap-3">
               {['System', 'Light', 'Dark'].map((theme) => (
-                <button key={theme} className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${theme === 'Dark' ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-muted'}`}>
+                <button
+                  key={theme}
+                  type="button"
+                  onClick={() => setAppearance(theme as 'System' | 'Light' | 'Dark')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${theme === appearance ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:bg-muted'}`}
+                >
                   {theme}
                 </button>
               ))}

@@ -122,7 +122,6 @@ export default function CaptureScreen() {
           multiline
           numberOfLines={5}
           textAlignVertical="top"
-          fontFamily="Inter_400Regular"
         />
         <Text style={[styles.charCount, { color: colors.mutedForeground }]}>
           {content.length} characters
@@ -181,6 +180,7 @@ const styles = StyleSheet.create({
   textInput: {
     borderRadius: 10, borderWidth: 1, padding: 14,
     minHeight: 120, fontSize: 15, lineHeight: 22,
+    fontFamily: 'Inter_400Regular',
   },
   charCount: { fontSize: 11, fontFamily: 'Inter_400Regular', textAlign: 'right' },
   captureBtn: {

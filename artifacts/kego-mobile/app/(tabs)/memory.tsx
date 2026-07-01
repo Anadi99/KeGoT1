@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Platform, TextInput
+  Platform, TextInput, type DimensionValue
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, Feather } from '@expo/vector-icons';
@@ -15,7 +15,7 @@ const allVaultEntries = mockVaultEntries;
 const totalMilestones = 124;
 const aiCoherence = 98.2;
 
-const NODES = [
+const NODES: { x: DimensionValue; y: DimensionValue; size: number; color: string }[] = [
   { x: '15%', y: '20%', size: 18, color: '#c2ff00' },
   { x: '55%', y: '12%', size: 12, color: '#3b82f6' },
   { x: '75%', y: '35%', size: 20, color: '#c2ff00' },
@@ -26,7 +26,7 @@ const NODES = [
   { x: '45%', y: '80%', size: 12, color: '#8b5cf6' },
 ];
 
-const LINES = [
+const LINES: { x1: DimensionValue; y1: DimensionValue; x2: DimensionValue; y2: DimensionValue }[] = [
   { x1: '15%', y1: '20%', x2: '55%', y2: '12%' },
   { x1: '55%', y1: '12%', x2: '75%', y2: '35%' },
   { x1: '15%', y1: '20%', x2: '30%', y2: '45%' },
