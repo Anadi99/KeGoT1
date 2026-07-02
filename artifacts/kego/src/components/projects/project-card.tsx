@@ -2,16 +2,19 @@ import type { Project } from '@/lib/types'
 import { Link } from 'wouter'
 import { formatTimeSincePause } from '@/lib/recovery-utils'
 import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { ResumeScore } from '@/components/recovery/resume-score'
 import { ProjectHealthBadge } from '@/components/recovery/project-health'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Bookmark, Play } from 'lucide-react'
 
 interface ProjectCardProps {
   project: Project
   variant?: 'compact' | 'full'
+  onMark?: (id: string) => void
+  onResume?: (id: string) => void
 }
 
-export function ProjectCard({ project, variant = 'full' }: ProjectCardProps) {
+export function ProjectCard({ project, variant = 'full', onMark, onResume }: ProjectCardProps) {
   const timeSincePause = formatTimeSincePause(project.pausedAt || new Date())
 
   if (variant === 'compact') {
@@ -31,6 +34,8 @@ export function ProjectCard({ project, variant = 'full' }: ProjectCardProps) {
       </Link>
     )
   }
+
+  const isAtRiskOrRecovering = project.health === 'at-risk' || project.health === 'recovering'
 
   return (
     <Link href={`/projects/${project.id}/recovery`}>
@@ -53,6 +58,38 @@ export function ProjectCard({ project, variant = 'full' }: ProjectCardProps) {
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>Last activity: {timeSincePause}</span>
             <ChevronRight className="size-4" />
+          </div>
+          <div className="flex gap-2">
+            {!isAtRiskOrRecovering && onMark && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onMark(project.id)
+                }}
+              >
+                <Bookmark className="size-3.5" />
+                Mark
+              </Button>
+            )}
+            {isAtRiskOrRecovering && onResume && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onResume(project.id)
+                }}
+              >
+                <Play className="size-3.5" />
+                Resume
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

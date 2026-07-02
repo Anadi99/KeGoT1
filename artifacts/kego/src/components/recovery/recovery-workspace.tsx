@@ -15,9 +15,11 @@ import { CheckCircle2, AlertCircle, BookOpen, Lightbulb, Link2, ArrowRight, Cloc
 interface RecoveryWorkspaceProps {
   project: Project
   workspace: RecoveryWorkspace
+  onSave?: (patch: Partial<RecoveryWorkspace>) => void
+  onMilestoneUpdate?: (milestoneId: string, patch: { status?: string; percentComplete?: number }) => void
 }
 
-export function RecoveryWorkspaceComponent({ project, workspace }: RecoveryWorkspaceProps) {
+export function RecoveryWorkspaceComponent({ project, workspace, onSave: _onSave, onMilestoneUpdate: _onMilestoneUpdate }: RecoveryWorkspaceProps) {
   return (
     <div className="space-y-6">
       <Card className="border-primary/20 bg-primary/5">

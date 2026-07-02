@@ -3,21 +3,37 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { BookOpen, Link2, Lightbulb, Archive, Search, Plus } from 'lucide-react'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { BookOpen, Link2, Lightbulb, Archive, Search, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
 interface KnowledgeVaultProps {
   entries: VaultEntry[]
   projectId: string
+  onAddEntry?: (entry: { title: string; content: string; category: string; tags: string[] }) => void
+  onDeleteEntry?: (id: string) => void
+  isAdding?: boolean
 }
 
-export function KnowledgeVault({ entries, projectId: _projectId }: KnowledgeVaultProps) {
+export function KnowledgeVault({ entries, projectId: _projectId, onAddEntry, onDeleteEntry, isAdding }: KnowledgeVaultProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<'all' | VaultEntry['category']>('all')
 
+  // Add Entry dialog state
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [newTitle, setNewTitle] = useState('')
+  const [newContent, setNewContent] = useState('')
+  const [newCategory, setNewCategory] = useState<string>('note')
+  const [newTags, setNewTags] = useState('')
+
   const filteredEntries = entries.filter((entry) => {
-    const matchesSearch = entry.title.toLowerCase().includes(searchQuery.toLowerCase()) || entry.content.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch =
+      entry.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      entry.content.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = selectedCategory === 'all' || entry.category === selectedCategory
     return matchesSearch && matchesCategory
   })
@@ -47,6 +63,21 @@ export function KnowledgeVault({ entries, projectId: _projectId }: KnowledgeVaul
     note: entries.filter((e) => e.category === 'note').length,
   }
 
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newTitle.trim()) return
+    const tags = newTags
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean)
+    onAddEntry?.({ title: newTitle.trim(), content: newContent.trim(), category: newCategory, tags })
+    setDialogOpen(false)
+    setNewTitle('')
+    setNewContent('')
+    setNewCategory('note')
+    setNewTags('')
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -54,14 +85,21 @@ export function KnowledgeVault({ entries, projectId: _projectId }: KnowledgeVaul
           <h2 className="text-3xl font-bold">Knowledge Vault</h2>
           <p className="text-muted-foreground mt-1">Archive of project memories, decisions, and resources</p>
         </div>
-        <Button className="gap-2"><Plus className="size-4" />Add Entry</Button>
+        <Button className="gap-2" onClick={() => setDialogOpen(true)}>
+          <Plus className="size-4" />Add Entry
+        </Button>
       </div>
 
       <Card>
         <CardContent className="pt-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <Input placeholder="Search vault..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
+            <Input
+              placeholder="Search vault..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
           </div>
         </CardContent>
       </Card>
@@ -81,29 +119,54 @@ export function KnowledgeVault({ entries, projectId: _projectId }: KnowledgeVaul
               <CardContent className="py-12 text-center">
                 <Archive className="size-12 text-muted-foreground mx-auto mb-4 opacity-50" />
                 <h3 className="font-semibold text-lg mb-1">No entries found</h3>
-                <p className="text-sm text-muted-foreground">{searchQuery ? 'Try adjusting your search query' : 'Start building your knowledge vault'}</p>
+                <p className="text-sm text-muted-foreground">
+                  {searchQuery ? 'Try adjusting your search query' : 'Start building your knowledge vault'}
+                </p>
               </CardContent>
             </Card>
           ) : (
             <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
               {filteredEntries.map((entry) => (
-                <Card key={entry.id} className="hover:shadow-md transition-shadow cursor-pointer group">
+                <Card key={entry.id} className="hover:shadow-md transition-shadow cursor-pointer group relative">
+                  {onDeleteEntry && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-2 right-2 size-7 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        onDeleteEntry(entry.id)
+                      }}
+                      aria-label="Delete entry"
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  )}
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <Badge className={getCategoryColor(entry.category)} variant="outline">
                         <span className="mr-1">{getCategoryIcon(entry.category)}</span>
                         {entry.category}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">{new Date(entry.createdAt).toLocaleDateString()}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(entry.createdAt).toLocaleDateString()}
+                      </span>
                     </div>
-                    <CardTitle className="text-base group-hover:text-primary transition-colors">{entry.title}</CardTitle>
+                    <CardTitle className="text-base group-hover:text-primary transition-colors pr-8">
+                      {entry.title}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <p className="text-sm text-foreground/70 line-clamp-2">{entry.content}</p>
                     {entry.tags && entry.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1">
-                        {entry.tags.slice(0, 3).map((tag, i) => (<Badge key={i} variant="secondary" className="text-xs">{tag}</Badge>))}
-                        {entry.tags.length > 3 && <Badge variant="secondary" className="text-xs">+{entry.tags.length - 3}</Badge>}
+                        {entry.tags.slice(0, 3).map((tag, i) => (
+                          <Badge key={i} variant="secondary" className="text-xs">{tag}</Badge>
+                        ))}
+                        {entry.tags.length > 3 && (
+                          <Badge variant="secondary" className="text-xs">+{entry.tags.length - 3}</Badge>
+                        )}
                       </div>
                     )}
                   </CardContent>
@@ -124,12 +187,70 @@ export function KnowledgeVault({ entries, projectId: _projectId }: KnowledgeVaul
             <div>
               <p className="text-xs text-muted-foreground mb-1">Last Updated</p>
               <p className="text-sm font-semibold">
-                {entries.length > 0 ? new Date(Math.max(...entries.map((e) => new Date(e.updatedAt).getTime()))).toLocaleDateString() : 'N/A'}
+                {entries.length > 0
+                  ? new Date(Math.max(...entries.map((e) => new Date(e.updatedAt).getTime()))).toLocaleDateString()
+                  : 'N/A'}
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Add Entry Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Add Vault Entry</DialogTitle></DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="vault-title">Title *</Label>
+              <Input
+                id="vault-title"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                placeholder="Entry title"
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="vault-content">Content</Label>
+              <Textarea
+                id="vault-content"
+                value={newContent}
+                onChange={(e) => setNewContent(e.target.value)}
+                placeholder="Notes, links, or description"
+                rows={3}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Category</Label>
+              <Select value={newCategory} onValueChange={setNewCategory}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="note">Note</SelectItem>
+                  <SelectItem value="decision">Decision</SelectItem>
+                  <SelectItem value="resource">Resource</SelectItem>
+                  <SelectItem value="link">Link</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="vault-tags">Tags (comma-separated)</Label>
+              <Input
+                id="vault-tags"
+                value={newTags}
+                onChange={(e) => setNewTags(e.target.value)}
+                placeholder="design, frontend, important"
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={isAdding || !newTitle.trim()}>
+                {isAdding ? 'Saving…' : 'Save Entry'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

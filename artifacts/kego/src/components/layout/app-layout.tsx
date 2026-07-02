@@ -1,10 +1,12 @@
 import { TopNav } from './top-nav'
 import { SideNav } from './side-nav'
 import { BottomNav } from './bottom-nav'
+import { DemoModeBanner } from './DemoModeBanner'
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      <DemoModeBanner />
       <TopNav />
 
       <div className="flex flex-1 overflow-hidden">

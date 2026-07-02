@@ -1,58 +1,90 @@
 /**
- * Supabase client configuration.
- * 
- * Replace the placeholder URL and anon key with your actual
- * Supabase project credentials. The client will be created
- * lazily only when environment variables are present.
- * 
- * The client type uses a recursive interface pattern to support
- * Supabase's fluent query builder chain (select → eq → eq → order → limit).
+ * Supabase client — typed singleton with sync and async access.
+ *
+ * Exports:
+ *   getClient()      — synchronous, returns the already-initialised singleton
+ *                      or null (safe to call anywhere, no await needed)
+ *   createClient()   — async, kept for backward compatibility with
+ *                      useHeartbeatData and useSedimentData
+ *
+ * The singleton is initialised eagerly on module load when env vars are
+ * present. Both exports share the same underlying _client reference, so
+ * multiple calls always return the same object (Property 1: singleton identity).
  */
+
+import type { SupabaseClient as SupabaseClientType } from '@supabase/supabase-js'
+import type { Database } from './database.types'
+
+// ─── Re-exports for consumer convenience ─────────────────────────────────────
+
+export type { Database } from './database.types'
+export type {
+  ProjectRow,
+  DecisionRow,
+  MilestoneRow,
+  VaultEntryRow,
+  TimelineEventRow,
+  CheckinRow,
+  RecoveryWorkspaceRow,
+  IntegrationRow,
+  UserSettingsRow,
+  TaskRow,
+  ProjectMemoryRow,
+} from './database.types'
+
+// ─── Environment vars ─────────────────────────────────────────────────────────
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
-interface SupabaseQueryResult {
-  data: Record<string, unknown>[] | null
-  error: { message: string } | null
+// ─── Singleton state ──────────────────────────────────────────────────────────
+
+let _client: SupabaseClientType<Database> | null = null
+let _initPromise: Promise<SupabaseClientType<Database> | null> | null = null
+
+// ─── Synchronous getter ───────────────────────────────────────────────────────
+
+/**
+ * Returns the already-initialised Supabase singleton, or null if env vars
+ * are absent or the async init hasn't resolved yet.
+ *
+ * Safe to call synchronously from service modules — no await required.
+ */
+export function getClient(): SupabaseClientType<Database> | null {
+  return _client
 }
 
-interface SupabaseFilterChain {
-  eq: (column: string, value: string) => SupabaseFilterChain
-  order: (column: string, opts: { ascending: boolean }) => SupabaseFilterChain
-  limit: (n: number) => Promise<SupabaseQueryResult>
-}
+// ─── Async initialiser (backward-compatible) ─────────────────────────────────
 
-interface SupabaseClient {
-  from: (table: string) => {
-    select: (columns: string) => SupabaseFilterChain
-  }
-}
-
-let _client: SupabaseClient | null = null
-let _clientPromise: Promise<SupabaseClient | null> | null = null
-
-export async function createClient(): Promise<SupabaseClient | null> {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    return null
-  }
-
+/**
+ * Async factory kept for backward compatibility with useHeartbeatData and
+ * useSedimentData, which do `await createClient()`.
+ *
+ * Subsequent calls resolve to the same singleton (_client), satisfying the
+ * singleton identity property even when called concurrently.
+ */
+export async function createClient(): Promise<SupabaseClientType<Database> | null> {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null
   if (_client) return _client
-  if (_clientPromise) return _clientPromise
+  if (_initPromise) return _initPromise
 
-  _clientPromise = (async () => {
+  _initPromise = (async () => {
     try {
-      // @ts-expect-error — optional dependency; may not be installed
       const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
-      _client = createSupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      _client = createSupabaseClient<Database>(SUPABASE_URL!, SUPABASE_ANON_KEY!)
       return _client
     } catch {
-      // @supabase/supabase-js not installed — return null
+      // @supabase/supabase-js not installed — graceful fallback
       return null
     }
   })()
 
-  return _clientPromise
+  return _initPromise
 }
+
+// ─── Eager init on module load ────────────────────────────────────────────────
+// Kicks off async init immediately so that getClient() returns the singleton
+// as soon as possible for service modules that call it synchronously.
+createClient().catch(() => {})
 
 export default createClient()
