@@ -1,11 +1,12 @@
 import { Link, useLocation } from 'wouter'
-import { LayoutGrid, FolderOpen, Settings } from 'lucide-react'
+import { LayoutGrid, FolderOpen, Settings, Palette } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutGrid },
   { href: '/projects', label: 'Projects', icon: FolderOpen },
   { href: '/settings', label: 'Settings', icon: Settings },
+  { href: '/brand', label: 'Brand', icon: Palette },
 ]
 
 export function BottomNav() {

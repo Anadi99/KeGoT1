@@ -13,6 +13,7 @@ import ProjectRecoveryPage from "@/pages/projects/project-recovery";
 import ProjectVaultPage from "@/pages/projects/project-vault";
 import ProjectTimelinePage from "@/pages/projects/project-timeline";
 import ProjectHubPage from "@/pages/projects/project-hub";
+import BrandPage from "@/pages/brand";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ function Router() {
       <Route path="/search" component={SearchPage} />
       <Route path="/integrations" component={IntegrationsPage} />
       <Route path="/settings" component={SettingsPage} />
+      <Route path="/brand" component={BrandPage} />
       <Route component={NotFound} />
     </Switch>
   );
