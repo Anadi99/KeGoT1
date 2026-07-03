@@ -198,7 +198,12 @@ function Hero() {
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         className="mb-8 relative z-10"
       >
-        <KegoMark size={160} />
+        <img
+          src="/Shinylogo.jpg"
+          alt="Kego Logo"
+          className="h-48 w-auto object-contain rounded-2xl"
+          style={{ filter: 'drop-shadow(0 0 60px rgba(124,58,237,0.5))' }}
+        />
       </motion.div>
 
       {/* Wordmark */}
@@ -208,7 +213,7 @@ function Hero() {
         transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
         className="relative z-10 mb-3"
       >
-        <h1 className="text-7xl sm:text-8xl font-black tracking-widest text-white">KEGO</h1>
+        <img src="/logo-primary.png" alt="Kego wordmark" className="h-12 w-auto object-contain" />
       </motion.div>
 
       {/* Tagline */}
@@ -268,10 +273,10 @@ function Hero() {
 
 // ─── LOGO SHOWCASE ────────────────────────────────────────────────────────────
 const logoVariants = [
-  { label: 'Primary', bg: '#0F0F11', border: 'border-white/[0.08]', mono: false, inverted: false, dark: true },
-  { label: 'Light Background', bg: '#F8FAFC', border: 'border-black/[0.06]', mono: false, inverted: false, dark: false },
-  { label: 'Dark Monochrome', bg: '#0F0F11', border: 'border-white/[0.08]', mono: true, inverted: true, dark: true },
-  { label: 'White on Black', bg: '#000000', border: 'border-white/[0.06]', mono: true, inverted: true, dark: true },
+  { label: 'Primary', bg: '#0F0F11', dark: true, src: '/logo-primary.png' },
+  { label: 'Shiny / 3D', bg: '#1a1a2e', dark: true, src: '/Shinylogo.jpg' },
+  { label: 'Monochrome', bg: '#0F0F11', dark: true, src: '/logo-monoN.png' },
+  { label: 'App Icon', bg: '#161622', dark: true, src: '/AiLogoN.png' },
 ]
 
 function LogoShowcase() {
@@ -294,30 +299,30 @@ function LogoShowcase() {
             variants={fadeUp}
             whileHover={shouldReduce ? {} : { y: -6, scale: 1.01 }}
             className="group relative rounded-2xl border overflow-hidden cursor-pointer"
-            style={{ background: v.bg, borderColor: v.dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)' }}
+            style={{ background: v.bg, borderColor: 'rgba(255,255,255,0.08)' }}
           >
             <div className="flex flex-col items-center justify-center py-14 px-8 gap-4">
-              <KegoMark size={72} mono={v.mono} inverted={v.inverted} />
-              <div className={`flex flex-col items-center gap-1 ${v.dark ? 'text-white' : 'text-gray-900'}`}>
-                <span className="text-2xl font-black tracking-widest">KEGO</span>
-                <span className={`text-xs tracking-[0.25em] font-medium ${v.dark ? 'text-white/40' : 'text-gray-400'}`}>
-                  SIMPLIFY • ORGANIZE • GROW
-                </span>
-              </div>
+              <img
+                src={v.src}
+                alt={`Kego ${v.label}`}
+                className="h-24 w-auto object-contain"
+                style={v.label === 'Monochrome' ? { filter: 'grayscale(1) brightness(1.5)' } : undefined}
+              />
             </div>
 
             {/* Hover overlay */}
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-3 backdrop-blur-sm">
-              <CopyBtn text="<svg><!-- KeGo Logo --></svg>" label="Copy SVG" />
+              <CopyBtn text={v.src} label="Copy path" />
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-white text-black transition-all"
+                onClick={() => toast.success(`${v.label} download started`)}
               >
-                <Download className="size-3" />Download PNG
+                <Download className="size-3" />Download
               </motion.button>
             </div>
 
-            <div className={`absolute bottom-3 left-4 text-xs font-medium tracking-wide ${v.dark ? 'text-white/30' : 'text-gray-400'}`}>
+            <div className="absolute bottom-3 left-4 text-xs font-medium tracking-wide text-white/30">
               {v.label}
             </div>
           </motion.div>
@@ -365,7 +370,12 @@ function AppIconSection() {
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             >
-              <AppIcon size={previewSize} radius={radius} />
+              <div
+                style={{ width: previewSize, height: previewSize, borderRadius: radius, background: '#161622', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                className="shadow-2xl"
+              >
+                <img src="/AiLogoN.png" alt="Kego app icon" style={{ width: previewSize * 0.78, height: previewSize * 0.78, objectFit: 'contain' }} />
+              </div>
             </motion.div>
           </AnimatePresence>
 
@@ -473,7 +483,12 @@ function AdaptiveSection() {
             />
           </AnimatePresence>
           <div className="relative z-10 flex flex-col items-center gap-4">
-            <AppIcon size={120} bg="transparent" radius={0} />
+            <img
+              src="/AiLogoN.png"
+              alt="Kego icon"
+              className="w-24 h-24 object-contain rounded-2xl"
+              style={{ filter: bgOptions[active].text === 'dark' ? 'none' : 'brightness(0.9)' }}
+            />
             <p className={`text-sm font-semibold tracking-widest uppercase ${bgOptions[active].text === 'dark' ? 'text-white/50' : 'text-black/40'}`}>
               {bgOptions[active].label}
             </p>
@@ -495,7 +510,7 @@ function AdaptiveSection() {
               className={`aspect-square rounded-xl border-2 flex flex-col items-center justify-center gap-1 transition-all overflow-hidden ${active === i ? 'border-purple-500' : 'border-transparent hover:border-white/20'}`}
               style={{ background: bg.color }}
             >
-              <AppIcon size={28} bg="transparent" radius={0} />
+              <img src="/AiLogoN.png" alt="icon" className="w-7 h-7 object-contain" />
             </motion.button>
           ))}
           {bgOptions.map((bg) => (
@@ -953,7 +968,7 @@ function BrandFooter() {
         <span className="text-[18vw] font-black tracking-widest text-white/[0.025]">KEGO</span>
       </div>
       <div className="relative z-10 flex flex-col items-center gap-3">
-        <KegoMark size={48} />
+        <img src="/logo-primary.png" alt="Kego" className="h-10 w-auto object-contain opacity-60" />
         <p className="text-sm font-semibold tracking-widest text-white/20 uppercase">Kego Brand Center</p>
         <p className="text-xs text-white/15">© 2026 Kego Inc. All brand assets reserved.</p>
         <p className="text-xs text-white/10">brand.kego.ai</p>
