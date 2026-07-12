@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+dist/
+.tsbuildinfo
+
+# Environment — NEVER commit these
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Vite
+dist-ssr/
+*.local
+
+# Editor
+.DS_Store
+Thumbs.db
